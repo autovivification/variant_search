@@ -22,6 +22,9 @@ class DbHandler(object):
     def execute(self, query):
         self.cur.execute(query)
 
+    def fetchrows(self):
+        return self.cur.fetchall()
+
     def close(self, commit=False):
         if commit:
             self.dbh.commit()
@@ -97,6 +100,38 @@ class DbHandler(object):
             kwargs['reported_ref'], kwargs['reported_alt']
         )
                         )
+
+    def search_genes(self, search_str, search_method='startswith'):
+        search_genes_startswith_query = """
+        SELECT name FROM genes
+        WHERE name LIKE '{0}%'
+        ORDER BY name ASC
+        """.format(search_str)
+
+        search_genes_contains_query = """
+        SELECT name FROM genes
+        WHERE name LIKE '%{0}%'
+        ORDER BY name ASC
+        """.format(search_str)
+
+        search_genes_query = search_genes_startswith_query if search_method == 'startswith' \
+            else search_genes_contains_query
+
+        self.execute(search_genes_query)
+
+    def search_variants_by_gene(self, gene_name):
+        search_variants_query = """
+        SELECT g.name, v.nucleotide_change, v.protein_change, v.assembly,
+        c.assignment, v.submitter_comment, v.last_updated, s.name, v.url
+        FROM genes g, variants v, variant_classification c, variant_source s
+        WHERE g.name = '{0}'
+        AND v.gene = g.uid
+        AND v.reported_classification = c.uid
+        AND v.source = s.uid
+        ORDER BY v.chr, v.genomic_start ASC
+        """.format(gene_name)
+
+        self.execute(search_variants_query)
 
     @staticmethod
     def init_variants_db():
