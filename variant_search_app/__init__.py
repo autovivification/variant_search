@@ -23,3 +23,4 @@ class JsonDateTimeEncoder(json.JSONEncoder):
             return str(o)
 
 import variant_search_app.api
+import variant_search_app.views

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "header.html" %}
+
+<style>
+.ui-autocomplete .highlight {
+    text-decoration: underline;
+    color: orange;
+}
+.ui-helper-hidden-accessible { border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px; 
+}
+href{
+    color: red;
+}
+</style>
+
+
+<div class="container">
+    <input id="gene_name" name="gene_name" type="text" placeholder="Search for genes"></input>
+
+    <table id="results_table" name="results_table" class="display" width="auto"></table>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    function highlightText(text, $elem) {
+        var stext = $.trim(text).toLowerCase();
+        var elem = $elem.get(0).firstChild;
+        var ntext, nspan, i;
+        while ((i = elem.data.toLowerCase().indexOf(stext)) >= 0) {
+            ntext = elem.splitText(i);
+            elem = ntext.splitText(stext.length);
+            nspan = document.createElement("span");
+            nspan.className = "highlight";
+            elem.parentNode.insertBefore(nspan, elem);
+            nspan.appendChild(ntext);
+        }
+    }
+
+    function buildDataTable(data) {
+        // update column headers to conform to standars of DataTables
+        // delete unwanted column header
+        data[0].columns.forEach((o, i, a) => a[i] = { title: a[i] });
+        data[0].columns.splice(8, 1);
+
+        // update source data with a href tag using URL from last column
+        // delete unwanted last column data
+        data[1].results.forEach(function(o, i, a) {
+            a[i][7] = '<a target="_blank" href="' + a[i][8] + '">' + a[i][7] + '</a>';
+            a[i].splice(8, 1);
+        });
+
+        $('#results_table').on( 'processing.dt', function ( e, settings, processing ) {
+            $('#processingIndicator').css( 'display', processing ? 'block' : 'none' );
+        } ).DataTable({
+            dom: 'Bfrtip',
+            destroy: true,
+            columns: data[0].columns,
+            data: data[1].results,
+            buttons: [
+                'copy',
+                {
+                    extend: 'csv',
+                    title: 'variant_results'
+                }
+            ],
+            "oLanguage": {
+                "sSearch": "Refine results: "
+            },
+        });
+    }
+
+    function hideDataTable() {
+        $('#results_table').parents('div.dataTables_wrapper').first().hide();
+    }
+
+    $('#gene_name').on("input propertychange",function() {
+        hideDataTable();
+    });
+
+    $('#gene_name').autocomplete({
+        source: function(request, response) {
+            $.getJSON("{{ url_for('genes', search_str='') }}" + request.term.toUpperCase(), {}, response)
+        },
+        minLength: 2,
+        select: function( event, ui ) {
+            $('#gene_name').val(ui.item.value);
+            $.ajax({
+                url: "{{ url_for('variants', gene_name='') }}" + ui.item.value,
+                dataType: 'json',
+                success: function( data, textStatus, jqXHR ) {
+                    buildDataTable(data);
+                    //showDataTable();
+                }
+            });
+            return false;
+        }
+    }).data("ui-autocomplete")._renderItem = function(ul, item) {
+        var $elem = $("<a></a>").text(item.label);
+        highlightText(this.term, $elem);
+        return $("<li></li>").append($elem).appendTo(ul);
+    };
+});
+</script>
+
+{% endblock %}
