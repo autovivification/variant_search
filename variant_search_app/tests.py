@@ -8,7 +8,7 @@ class ApiTestCase(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
 
-    def test_genes_autocmp(self):
+    def test_gene_name_startswith(self):
         resp = self.app.get('/genes/TRPV')
         assert resp.data == b'["TRPV1", "TRPV3", "TRPV4", "TRPV5", "TRPV6"]'
 
