@@ -27,7 +27,7 @@ $ . venv/bin/activate
 
 Step 3: Initialize empty PostgreSQL database using schema defined in `variant_search_db/schema.sql`:  
 ```
-(venv)$ psql -U postgres -d postgres -f db/schema.sql
+(venv)$ psql -U postgres -d postgres -f variant_search_db/schema.sql
 ```
 
 Step 4: Execute database loading script, which downloads the `variant_results.tsv` dataset 
