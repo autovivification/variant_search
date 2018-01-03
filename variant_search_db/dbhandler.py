@@ -5,7 +5,7 @@ from subprocess import Popen
 import psycopg2
 
 
-INVITAE_VARIANTS_DB_SCHEMA = 'db/schema.sql'
+INVITAE_VARIANTS_DB_SCHEMA = 'variant_search_db/schema.sql'
 INVITAE_VARIANTS_DB_NAME = 'invitae_variant_search'
 
 
